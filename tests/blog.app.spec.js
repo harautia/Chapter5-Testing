@@ -45,3 +45,36 @@ test('front page can be opened', async ({ page }) => {
     await expect(page.getByText('Wrong Credentials')).toBeVisible()
   })
 })
+
+
+describe('When logged in', () => {
+  beforeEach(async ({ page, request }) => {
+    await request.post('http://localhost:3003/api/testing/reset')
+    await request.post('http://localhost:3003/api/users', {
+      data: {
+        name: 'Teppo Testaaja',
+        username: 'testaaja',
+        password: 'salainen'
+      }
+    })
+    await page.goto('http://localhost:3003')
+
+    await page.getByRole('button', { name: 'login' }).click()
+    await page.getByLabel('username').fill('testaaja')
+    await page.getByLabel('password').fill('salainen')
+    await page.getByRole('button', { name: 'login' }).click()
+    })
+
+    test('a new blog can be created', async ({ page }) => {
+
+    await page.getByRole('button', { name: 'new blog' }).click()
+
+    const textboxes = await page.getByRole('textbox').all()
+    await textboxes[0].fill('Lion Whisperer')
+    await textboxes[1].fill('Max Luther')
+    await textboxes[2].fill('www.lion-whisperer.com')
+    await textboxes[3].fill('12')
+    await page.getByRole('button', { name: 'add' }).click()
+    await expect(page.locator('tr').nth(1).getByText('Max Luther')).toBeVisible()
+  })
+})
