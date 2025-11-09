@@ -14,11 +14,12 @@ describe('Blog app', () => {
     })
     await request.post('http://localhost:3003/api/users', {
       data: {
-        name: 'Test User',
-        username: 'tester',
-        password: 'invalid'
+        name: 'Hannu Rautiainen',
+        username: 'hannu',
+        password: 'jeppis1234'
       }
     })
+
     await page.goto('http://localhost:3003')
   })
 
@@ -35,14 +36,14 @@ describe('Blog app', () => {
   })
 
   test('user unsuccessful log in', async ({ page }) => {
-    await loginWith(page, 'tester', 'valid')
+    await loginWith(page, 'testaaja', 'invalid')
     await expect(page.getByText('Wrong Credentials')).toBeVisible()
   })
 
   describe('When logged in', () => {
     beforeEach(async ({ page }) => {
-    await loginWith(page, 'testaaja', 'salainen')
-    })
+      await loginWith(page, 'testaaja', 'salainen')
+  })
 
     test('a new blog can be created', async ({ page }) => {
     await createBlog(page, 'Lion Whisperer', 'Max Luther', 'www.lion-whisperer.com', '12')
@@ -55,9 +56,17 @@ describe('Blog app', () => {
       })
 
       test('Likes is added by one', async ({ page }) => {
-      await page.getByRole('button', { name: 'show details' }).click()
-      await page.getByRole('button', { name: 'Add Like' }).click()
-      await expect(page.getByText('25')).toBeVisible()
+        await page.getByRole('button', { name: 'show details' }).click()
+        await page.getByRole('button', { name: 'Add Like' }).click()
+        await expect(page.getByText('25')).toBeVisible()
+      })
+
+      test('Blog Delete Button seen by other user', async ({ page }) => {
+        await page.getByRole('button', { name: 'Logout' }).click()
+        await loginWith(page, 'hannu', 'jeppis1234')
+        await page.getByRole('button', { name: 'show details' }).click()
+        await expect(page.getByText('Delete')).not.toBeVisible()
+        await expect(page.getByText('Add Like')).toBeVisible()
       })
     })
   })
