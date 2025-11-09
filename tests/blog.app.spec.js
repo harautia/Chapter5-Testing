@@ -30,14 +30,17 @@ describe('Blog app', () => {
     await expect(page.getByText('Blog app , Hannu Rautiainen, 2025')).toBeVisible()
   })
 
-  test('user can log in', async ({ page }) => {
-    await loginWith(page, 'testaaja', 'salainen')
-    await expect(page.getByText('Teppo Testaaja logged in')).toBeVisible()
-  })
+  describe('Login', () => {
 
-  test('user unsuccessful log in', async ({ page }) => {
-    await loginWith(page, 'testaaja', 'invalid')
-    await expect(page.getByText('Wrong Credentials')).toBeVisible()
+    test('user can log in', async ({ page }) => {
+      await loginWith(page, 'testaaja', 'salainen')
+      await expect(page.getByText('Teppo Testaaja logged in')).toBeVisible()
+    })
+
+    test('user unsuccessful log in', async ({ page }) => {
+      await loginWith(page, 'testaaja', 'invalid')
+      await expect(page.getByText('Wrong Credentials')).toBeVisible()
+    })
   })
 
   describe('When logged in', () => {
@@ -50,24 +53,30 @@ describe('Blog app', () => {
     await expect(page.locator('tr').nth(1).getByText('Max Luther')).toBeVisible()
     })
 
-    describe('One blog already exists', () => {
-      beforeEach(async ({ page }) => {
-        await createBlog(page, 'Hippo Whisperer', 'Lea Luther', 'www.hippo-whisperer.com', '24')
-      })
+    test('Likes is added by one', async ({ page }) => {
+      await createBlog(page, 'Lion Whisperer', 'Max Luther', 'www.lion-whisperer.com', '12')
+      await expect(page.locator('tr').nth(1).getByText('Max Luther')).toBeVisible()
+      await page.getByRole('button', { name: 'show details' }).click()
+      await page.getByRole('button', { name: 'Add Like' }).click()
+      await expect(page.getByText('13')).toBeVisible()
+    })    
 
-      test('Likes is added by one', async ({ page }) => {
-        await page.getByRole('button', { name: 'show details' }).click()
-        await page.getByRole('button', { name: 'Add Like' }).click()
-        await expect(page.getByText('25')).toBeVisible()
-      })
+    test('Blog Delete Button seen by other user', async ({ page }) => {
+      await createBlog(page, 'Lion Whisperer', 'Max Luther', 'www.lion-whisperer.com', '12')
+      await expect(page.locator('tr').nth(1).getByText('Max Luther')).toBeVisible()
+      await page.getByRole('button', { name: 'Logout' }).click()
+      await loginWith(page, 'hannu', 'jeppis1234')
+      await page.getByRole('button', { name: 'show details' }).click()
+      await expect(page.getByText('Delete')).not.toBeVisible()
+      await expect(page.getByText('Add Like')).toBeVisible()
+    })
 
-      test('Blog Delete Button seen by other user', async ({ page }) => {
-        await page.getByRole('button', { name: 'Logout' }).click()
-        await loginWith(page, 'hannu', 'jeppis1234')
-        await page.getByRole('button', { name: 'show details' }).click()
-        await expect(page.getByText('Delete')).not.toBeVisible()
-        await expect(page.getByText('Add Like')).toBeVisible()
-      })
+    test('Blog are printed in ascening order based on likes', async ({ page }) => {
+      await createBlog(page, 'Lion Whisperer', 'Max Luther', 'www.lion-whisperer.com', '12')
+      await expect(page.locator('tr').nth(1).getByText('Max Luther')).toBeVisible()
+      await createBlog(page, 'Hippo Whisperer', 'Lea Luther', 'www.lion-whisperer.com', '24')
+      await expect(page.locator('tr').nth(1).getByText('Lea Luther')).toBeVisible()
+      await expect(page.locator('tr').nth(2).getByText('Max Luther')).toBeVisible()
     })
   })
 })
